@@ -1,7 +1,7 @@
 baseURL = "/"
 languageCode = "en-us"
 title = "GitHub Organization README Pages"
-theme = "hugo-theme-learn"
+theme = "https://github.com/theNewDynamic/gohugo-theme-ananke.git"
 paginate = 10
 
 [params]
