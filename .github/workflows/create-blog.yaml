@@ -1,0 +1,66 @@
+name: Generate GitHub Pages with Hugo
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  generate_pages:
+    runs-on: ubuntu-latest
+    
+    steps:
+    # Step 1: Checkout the repository
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    # Step 2: Set up Hugo
+    - name: Set up Hugo
+      uses: peaceiris/actions-hugo@v2
+      with:
+        hugo-version: '0.88.1'  
+
+    # Step 3: Install dependencies
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y jq gh
+    
+    # Step 4: Authenticate GitHub CLI (for fetching repos in the org)
+    - name: Authenticate GitHub CLI
+      run: gh auth login --with-token < ${{ secrets.GITHUB_TOKEN }}
+    
+    # Step 5: Fetch all repos in the GitHub org
+    - name: Fetch all repos
+      run: |
+        mkdir repos
+        org_name="readme-hub-test"  # Replace with your org name
+        repos=$(gh repo list $org_name --json name --jq '.[].name')
+        for repo in $repos; do
+          gh repo clone "$org_name/$repo" repos/$repo
+        done
+
+    # Step 6: Generate content for each repo README
+    - name: Generate Hugo content
+      run: |
+        mkdir -p content/repos
+        for repo in $(ls repos); do
+          repo_name=$(basename "$repo")
+          readme_path="repos/$repo/README.md"
+          if [ -f "$readme_path" ]; then
+            cat "$readme_path" > "content/repos/$repo_name.md"
+          fi
+        done
+
+    # Step 7: Build the Hugo site
+    - name: Build Hugo site
+      run: hugo
+
+    # Step 8: Commit and push the generated site to gh-pages branch
+    - name: Deploy to GitHub Pages
+      uses: JamesIves/github-pages-deploy-action@v4
+      with:
+        branch: gh-pages
+        folder: public
+        token: ${{ secrets.GITHUB_TOKEN }}
