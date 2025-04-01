@@ -1,0 +1,8 @@
+baseURL = "/"
+languageCode = "en-us"
+title = "GitHub Organization README Pages"
+theme = "hugo-theme-learn"
+paginate = 10
+
+[params]
+  author = ""
