@@ -27,21 +27,17 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y jq gh
     
-    # Step 4: Authenticate GitHub CLI
-    - name: Authenticate GitHub CLI
-      run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
-    
-    # Step 5: Fetch all repos in the GitHub org
+    # Step 4: Fetch all repos in the GitHub org (optional)
     - name: Fetch all repos
       run: |
         mkdir repos
-        org_name="readme-hub-test"  # Replace with your org name
+        org_name="readme-hub-test"
         repos=$(gh repo list $org_name --json name --jq '.[].name')
         for repo in $repos; do
           gh repo clone "$org_name/$repo" repos/$repo
         done
 
-    # Step 6: Generate content for each repo README
+    # Step 5: Generate content for each repo README
     - name: Generate Hugo content
       run: |
         mkdir -p content/repos
@@ -53,14 +49,15 @@ jobs:
           fi
         done
 
-    # Step 7: Build the Hugo site
+    # Step 6: Build the Hugo site
     - name: Build Hugo site
       run: hugo
 
-    # Step 8: Commit and push the generated site to gh-pages branch
+    # Step 7: Deploy to GitHub Pages using peaceiris/actions-gh-pages
     - name: Deploy to GitHub Pages
-      uses: JamesIves/github-pages-deploy-action@v4
+      uses: peaceiris/actions-gh-pages@v3
       with:
+        personal-token: ${{ secrets.GITHUB_TOKEN }}
         branch: gh-pages
         folder: public
-        token: ${{ secrets.GITHUB_TOKEN }}
+        target-branch: gh-pages
