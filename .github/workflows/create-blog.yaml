@@ -57,10 +57,21 @@ jobs:
     - name: Build Hugo site
       run: hugo
 
-    # Step 8: Commit and push the generated site to gh-pages branch
-    - name: Deploy to GitHub Pages
-      uses: JamesIves/github-pages-deploy-action@v4
-      with:
-        branch: main
-        folder: public
-        token: ${{ secrets.GITHUB_TOKEN }}
+    # Step 8: Deploy to docs folder on the main branch
+    - name: Deploy to docs folder
+      run: |
+        # Remove the existing docs folder, if any
+        rm -rf docs
+        # Move the generated site to the docs folder
+        mv public docs
+        # Configure Git so the commit is attributed to the actions bot
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        # Add and commit changes (if there are any)
+        git add docs
+        git commit -m "Deploy GitHub Pages site via GitHub Actions" || echo "No changes to commit"
+        # Push changes to the main branch
+        git push origin HEAD:main
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
